@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { customAlert } from '../helpers';
+import { API_BASE_URL } from './apiConfig';
 
-const API_RECEIPTS_URL =
-  'https://calculus-qr-scanner-api.onrender.com/api/receipts';
+const API_RECEIPTS_URL = `${API_BASE_URL}/receipts`;
 
 export const exportReceipts = async (
   dbSerialNumber: string,

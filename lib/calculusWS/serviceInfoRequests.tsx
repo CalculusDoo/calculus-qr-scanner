@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from './apiConfig';
 
-const API_INFO_URL = 'https://calculus-qr-scanner-api.onrender.com/api/info';
+const API_INFO_URL = `${API_BASE_URL}/info`;
 
 export const getDateTimeWebServer = async (): Promise<boolean> => {
   try {

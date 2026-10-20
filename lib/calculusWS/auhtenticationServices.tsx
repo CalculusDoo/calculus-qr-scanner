@@ -2,9 +2,10 @@ import axios from 'axios';
 import { User } from '../types/User';
 import { customAlert } from '../helpers';
 import { removeLocalStorage } from '../localAsyncStorage';
+import { API_BASE_URL } from './apiConfig';
 
-const API_AUTH_URL = 'https://calculus-qr-scanner-api.onrender.com/api/auth';
-const API_USERS_URL = 'https://calculus-qr-scanner-api.onrender.com/api/users';
+const API_AUTH_URL = `${API_BASE_URL}/auth`;
+const API_USERS_URL = `${API_BASE_URL}/users`;
 
 // # REGISTER USER
 export const register = async (
