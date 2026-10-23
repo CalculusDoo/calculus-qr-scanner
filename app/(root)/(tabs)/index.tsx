@@ -18,6 +18,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import images from '@/assets/constants/images';
 import {
@@ -33,6 +34,11 @@ import OcrCameraHint from '@/components/receipt-ocr/OcrCameraHint';
 import { appendVerifiedReceipt } from '@/lib/receipt-import';
 import ReceiptVerificationModal from '@/components/receipt-ocr/ReceiptVerificationModal';
 import { amountInMinorUnits, isOfficialReceiptUrl, ReceiptVerificationDraft } from '@/lib/receipt-verification';
+import { useAnnouncements } from '@/lib/useAnnouncements';
+import { nextPopupAnnouncement } from '@/lib/announcements';
+import { Announcement } from '@/lib/types/Announcement';
+import AnnouncementsDrawer from '@/components/announcements/AnnouncementsDrawer';
+import AnnouncementPopup from '@/components/announcements/AnnouncementPopup';
 
 export default function Index() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -71,6 +77,37 @@ export default function Index() {
 
   const session = useRef({ user, scannedReceipts });
   useLayoutEffect(() => { session.current = { user, scannedReceipts }; }, [user, scannedReceipts]);
+
+  const insets = useSafeAreaInsets();
+  const {
+    announcements,
+    unreadCount,
+    refreshing: announcementsRefreshing,
+    refresh: refreshAnnouncements,
+    setRead: setAnnouncementRead,
+  } = useAnnouncements();
+  const [announcementsVisible, setAnnouncementsVisible] = useState(false);
+  const [popupAnnouncement, setPopupAnnouncement] = useState<Announcement | null>(null);
+  // Važno obaveštenje se u jednoj sesiji prikazuje najviše jednom, i ako označavanje ne uspe
+  const shownPopupIds = useRef(new Set<string>());
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshAnnouncements();
+    }, [refreshAnnouncements]),
+  );
+
+  useEffect(() => {
+    if (cameraOpen || announcementsVisible || popupAnnouncement) return;
+    const next = nextPopupAnnouncement(announcements, shownPopupIds.current);
+    if (next) setPopupAnnouncement(next);
+  }, [announcements, cameraOpen, announcementsVisible, popupAnnouncement]);
+
+  const closePopupAnnouncement = (announcement: Announcement) => {
+    shownPopupIds.current.add(announcement.id);
+    setPopupAnnouncement(null);
+    void setAnnouncementRead(announcement.id);
+  };
 
   useEffect(() => {
     if (cameraOpen && !hintDismissed.current) {
@@ -389,6 +426,27 @@ export default function Index() {
         paddingHorizontal: 20,
       }}
     >
+      <Pressable
+        onPress={() => setAnnouncementsVisible(true)}
+        hitSlop={10}
+        accessibilityRole='button'
+        accessibilityLabel={
+          unreadCount > 0
+            ? `Obaveštenja, nepročitanih: ${unreadCount}`
+            : 'Obaveštenja'
+        }
+        style={[styles.bellButton, { top: insets.top + 12 }]}
+      >
+        <Ionicons name='notifications-outline' size={28} color='white' />
+        {unreadCount > 0 && (
+          <View style={styles.bellBadge}>
+            <Text style={styles.bellBadgeText}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </Text>
+          </View>
+        )}
+      </Pressable>
+
       <Image
         source={images.logo}
         style={{
@@ -446,6 +504,20 @@ export default function Index() {
       </Text>
       {manualEntry}
       {receiptPreview}
+      <AnnouncementsDrawer
+        visible={announcementsVisible}
+        onClose={() => setAnnouncementsVisible(false)}
+        announcements={announcements}
+        refreshing={announcementsRefreshing}
+        onRefresh={() => { void refreshAnnouncements(); }}
+        onRead={(id) => { void setAnnouncementRead(id); }}
+      />
+      {!showModal && !manualEntryVisible && (
+        <AnnouncementPopup
+          announcement={popupAnnouncement}
+          onClose={closePopupAnnouncement}
+        />
+      )}
     </View>
   );
 }
@@ -499,6 +571,30 @@ const styles = StyleSheet.create({
     color: '#2368fd',
     backgroundColor: 'white',
     zIndex: 1,
+  },
+
+  bellButton: {
+    position: 'absolute',
+    right: 20,
+    padding: 6,
+    zIndex: 1,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: '#f75555',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontFamily: 'Rubik-Bold',
   },
 
   scanGuide: {
