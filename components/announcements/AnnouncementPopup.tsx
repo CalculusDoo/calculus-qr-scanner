@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Announcement } from '@/lib/types/Announcement';
 import { isSafeAnnouncementLink } from '@/lib/announcements';
+import AnnouncementBody from './AnnouncementBody';
 
 type Props = {
   announcement: Announcement | null;
@@ -28,9 +29,7 @@ export default function AnnouncementPopup({ announcement, onClose }: Props) {
             </Text>
           </View>
           <ScrollView>
-            <Text className='text-base font-rubik text-black-200'>
-              {announcement.body}
-            </Text>
+            <AnnouncementBody body={announcement.body} className='text-base font-rubik text-black-200' />
           </ScrollView>
 
           {isSafeAnnouncementLink(announcement.link) && (

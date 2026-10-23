@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import BottomDrawer from '@/components/ui/BottomDrawer';
 import { Announcement } from '@/lib/types/Announcement';
+import AnnouncementBody from './AnnouncementBody';
 import {
   formatAnnouncementDate,
   isSafeAnnouncementLink,
@@ -75,12 +76,11 @@ export default function AnnouncementsDrawer({
             <Text className='mt-1 text-xs font-rubik text-black-100'>
               {formatAnnouncementDate(item.validFrom)}
             </Text>
-            <Text
+            <AnnouncementBody
+              body={item.body}
               className='mt-2 text-sm font-rubik text-black-200'
               numberOfLines={expanded ? undefined : 2}
-            >
-              {item.body}
-            </Text>
+            />
             {expanded && isSafeAnnouncementLink(item.link) && (
               <TouchableOpacity
                 onPress={() => Linking.openURL(item.link!.trim())}
