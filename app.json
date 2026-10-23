@@ -48,9 +48,12 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash.png",
-          "resizeMode": "cover",
+          "imageWidth": 240,
+          "resizeMode": "contain",
           "backgroundColor": "#699cf5",
-          "enableFullScreenImage_legacy": true
+          "android": {
+            "imageWidth": 180
+          }
         }
       ],
       [
